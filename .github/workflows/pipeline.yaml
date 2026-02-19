@@ -8,7 +8,6 @@ on:
 
 jobs:
   ci-stage:
-    name: CI - Test & Build
     runs-on: ubuntu-latest
 
     steps:
@@ -27,13 +26,14 @@ jobs:
           pip install pytest
 
       - name: Run Unit Tests
-        run: pytest app/tests/
+        run: |
+          export PYTHONPATH=$(pwd)
+          pytest app/tests/
 
       - name: Build Docker Image
         run: docker build -t pet-adoption-model:latest .
 
   cd-stage:
-    name: CD - Deploy & Smoke Test
     needs: ci-stage
     runs-on: ubuntu-latest
 
@@ -41,10 +41,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Start Application (Docker Compose)
+      - name: Deploy via Docker Compose
         run: docker compose up -d --build
 
-      - name: Wait for App to Start
+      - name: Wait for Service
         run: sleep 15
 
       - name: Smoke Test
