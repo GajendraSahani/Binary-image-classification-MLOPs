@@ -1,9 +1,16 @@
 name: End-to-End MLOps Pipeline
-on: [push]
+
+on:
+  push:
+    branches:
+      - main
+      - develop
 
 jobs:
   ci-stage:
+    name: CI - Test & Build
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -17,25 +24,30 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r app/requirements.txt
-          pip install pytest 
+          pip install pytest
 
-      - [cite_start]name: Run Unit Tests
-        [cite_start]run: pytest app/tests/
+      - name: Run Unit Tests
+        run: pytest app/tests/
 
-      - [cite_start]name: Build Docker Image
+      - name: Build Docker Image
         run: docker build -t pet-adoption-model:latest .
 
   cd-stage:
+    name: CD - Deploy & Smoke Test
     needs: ci-stage
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - [cite_start]name: Deploy via Docker Compose
-        run: docker-compose up -d
+      - name: Start Application (Docker Compose)
+        run: docker compose up -d --build
 
-      - [cite_start]name: Smoke Test
+      - name: Wait for App to Start
+        run: sleep 15
+
+      - name: Smoke Test
         run: |
-          sleep 10
           curl -f http://localhost:8000/health || exit 1
+ 
