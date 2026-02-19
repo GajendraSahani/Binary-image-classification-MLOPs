@@ -1,11 +1,20 @@
 stages:
+  split:
+    cmd: python src/data_split.py
+    deps:
+      - data/raw
+      - src/data_split.py
+    outs:
+      - data/split_data
+
   preprocess:
     cmd: python src/preprocess.py
     deps:
-      - data/raw_images
+      - data/split_data
       - src/preprocess.py
     outs:
       - data/processed_images
+
   train:
     cmd: python src/train.py
     deps:
