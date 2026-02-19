@@ -1,1 +1,18 @@
-
+stages:
+  preprocess:
+    cmd: python src/preprocess.py
+    deps:
+      - data/raw_images
+      - src/preprocess.py
+    outs:
+      - data/processed_images
+  train:
+    cmd: python src/train.py
+    deps:
+      - data/processed_images
+      - src/train.py
+    outs:
+      - models/model.h5
+    metrics:
+      - metrics.json:
+          cache: false
