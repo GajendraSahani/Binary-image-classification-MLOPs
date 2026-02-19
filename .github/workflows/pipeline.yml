@@ -1,1 +1,23 @@
+name: End-to-End MLOps Pipeline
+on: [push]
 
+jobs:
+  ci-stage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - [cite_start]name: Run Unit Tests [cite: 36]
+        run: pytest app/tests/
+      - [cite_start]name: Build Docker Image [cite: 40]
+        run: docker build -t pet-adoption-model:latest .
+
+  cd-stage:
+    needs: ci-stage
+    runs-on: ubuntu-latest
+    steps:
+      - [cite_start]name: Deploy via Docker Compose [cite: 46]
+        run: docker-compose up -d
+      - [cite_start]name: Smoke Test [cite: 52]
+        run: |
+          sleep 5
+          curl -f http://localhost:8000/health || exit 1
