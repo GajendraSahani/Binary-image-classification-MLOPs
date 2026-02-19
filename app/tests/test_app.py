@@ -25,4 +25,4 @@ def test_preprocess_logic():
 def test_health_endpoint():
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "healthy"} [cite: 24]
+    assert response.json() == {"status": "healthy"}
