@@ -15,8 +15,12 @@ request_count = 0
 @app.on_event("startup")
 def load_model():
     global model
-    model = tf.keras.models.load_model("models/model.h5")
-    logging.info("Model loaded successfully")
+    try:
+        model = tf.keras.models.load_model("models/model.h5")
+        logging.info("Model loaded successfully")
+    except Exception as e:
+        logging.error(f"Model loading failed: {e}")
+        model = None
 
 @app.get("/health")
 def health():
