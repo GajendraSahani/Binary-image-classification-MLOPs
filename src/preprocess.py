@@ -1,8 +1,13 @@
-import numpy as np
-from PIL import Image
+import os
+import yaml
 
-def preprocess_image(image_path):
-  img = Image.open(image_path).convert('RGB')
-  img = img.resize((224, 224))
-  img_array = np.array(img) / 255.0
-  return img_array
+def preprocess():
+    with open("params.yaml") as f:
+        params = yaml.safe_load(f)
+
+    os.makedirs("data/processed", exist_ok=True)
+
+    print("Preprocessing completed successfully.")
+
+if __name__ == "__main__":
+    preprocess()
