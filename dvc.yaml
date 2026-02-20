@@ -1,27 +1,27 @@
 stages:
-  split:
-    cmd: python src/data_split.py
-    deps:
-      - data/raw
-      - src/data_split.py
-    outs:
-      - data/split_data
-
   preprocess:
     cmd: python src/preprocess.py
     deps:
-      - data/split_data
       - src/preprocess.py
+      - params.yaml
     outs:
-      - data/processed_images
+      - data/processed
 
   train:
     cmd: python src/train.py
     deps:
-      - data/processed_images
       - src/train.py
+      - data/processed
+      - params.yaml
+    params:
+      - training
     outs:
       - models/model.h5
+
+  evaluate:
+    cmd: python src/evaluate.py
+    deps:
+      - src/evaluate.py
+      - models/model.h5
     metrics:
-      - metrics.json:
-          cache: false
+      - metrics.json
