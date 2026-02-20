@@ -1,68 +1,48 @@
-import logging
 import time
-import io
-import os
-from fastapi import FastAPI, UploadFile, File
-import tensorflow as tf
+import logging
 import numpy as np
-from PIL import Image
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    filename="app_monitoring.log"
-)
-logger = logging.getLogger("InferenceService")
+from fastapi import FastAPI, UploadFile, File
+from src.utils import load_and_preprocess_image
+import tensorflow as tf
 
 app = FastAPI()
 
-metrics = {"request_count": 0}
+logging.basicConfig(level=logging.INFO)
 
-MODEL_PATH = os.path.join("models", "model.h5")
 model = None
+request_count = 0
 
 @app.on_event("startup")
 def load_model():
     global model
-    if os.path.exists(MODEL_PATH):
-        model = tf.keras.models.load_model(MODEL_PATH)
-        logger.info("Model loaded successfully.")
-    else:
-        logger.warning("Model file not found. Running without model.")
-
+    model = tf.keras.models.load_model("models/model.h5")
+    logging.info("Model loaded successfully")
 
 @app.get("/health")
-async def health():
-    return {"status": "healthy"}
-
+def health():
+    return {
+        "status": "ok",
+        "requests_served": request_count
+    }
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
-    if model is None:
-        return {"error": "Model not loaded"}
+    global request_count
 
-    metrics["request_count"] += 1
     start_time = time.time()
 
-    content = await file.read()
-    image = Image.open(io.BytesIO(content)).convert('RGB').resize((224, 224))
-    img_array = np.expand_dims(np.array(image) / 255.0, axis=0)
+    image = load_and_preprocess_image(file.file)
 
-    prediction = model.predict(img_array)
-    label = "Dog" if prediction[0] > 0.5 else "Cat"
+    prediction = model.predict(image)[0][0]
+    label = "Dog" if prediction > 0.5 else "Cat"
 
     latency = time.time() - start_time
+    request_count += 1
 
-    logger.info(
-        f"Request #{metrics['request_count']} | "
-        f"Label: {label} | "
-        f"Latency: {latency:.4f}s"
-    )
+    logging.info(f"Prediction latency: {latency}")
 
     return {
         "label": label,
-        "confidence": float(prediction[0]),
-        "latency": f"{latency:.4f}s",
-        "total_requests_served": metrics["request_count"]
+        "confidence": float(prediction),
+        "latency": latency
     }
- 
