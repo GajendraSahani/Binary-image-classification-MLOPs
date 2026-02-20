@@ -1,0 +1,9 @@
+training:
+  epochs: 5
+  batch_size: 32
+  learning_rate: 0.001
+
+data:
+  img_size: 224
+  test_split: 0.1
+  val_split: 0.1
