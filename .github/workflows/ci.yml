@@ -37,6 +37,19 @@ jobs:
       - name: Run Container Smoke Test
         run: |
           docker run -d -p 8000:8000 --name test-container mlops-app
-          sleep 10
+          
+          echo "Waiting for container to start..."
+          
+          for i in {1..30}; do
+            if curl -s http://localhost:8000/health > /dev/null; then
+              echo "Service is up!"
+              break
+            fi
+            echo "Waiting..."
+            sleep 2
+          done
+          
           curl --fail http://localhost:8000/health
+          
           docker stop test-container
+          docker rm test-container
